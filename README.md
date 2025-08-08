@@ -21,10 +21,6 @@ graph TD
         F[App 2 Uptime Kuma]
         G[App 3 その他アプリ]
     end
-    subgraph "自動化処理 (Automation)"
-        H[Cronジョブ]
-        I[Pythonスクリプト]
-    end
     A -- HTTPS/SSH --> B
     B -- Docker Socket --> C
     B -- Docker Socket --> D
@@ -33,8 +29,18 @@ graph TD
     B -- Docker Socket --> G
     A -- Portainer UI (HTTPS) --> D
     A -- Wiki (HTTPS) --> E
+    style B fill:#f9f,stroke:#333,stroke-width:2px
+```
+
+Pythonスクリプトとcronを組み合わせ、定期的なタスクを自動化しています。
+
+```mermaid
+graph TD
+    subgraph "自動化処理 (Automation)"
+        H[Cronジョブ]
+        I[Pythonスクリプト]
+    end
     H -- 実行 --> I
     I -- API Call --> AWS_Boto3
     I -- Local Backup --> Volume
-    style B fill:#f9f,stroke:#333,stroke-width:2px
 ```
