@@ -9,18 +9,19 @@
 ```mermaid
 graph TD
     subgraph "インターネット (Internet)"
-        J[ユーザ]
+        J[User]
+        K[My Android]
     end
     subgraph "プライベートネットワーク"
-        A[開発者PC]
-        B[Debian Server on OrangePi]
+        A[My Windows PC]
+        B[My Debian Server on OrangePi]
     end
     subgraph "Docker 環境 (Debian Server内)"
         C[server monitor]
-        D[Portainer]
-        E[App 1 Wiki.js]
-        F[App 2 FreshRSS]
-        G[App 3 その他アプリ]
+        D[App 1 Wiki.js]
+        E[App 2 FreshRSS]
+        F[App 3 Redmine]
+        G[App 4 Heimdall]
     end
     A -- SSH --> B
     B -- Docker Socket --> C
@@ -28,13 +29,16 @@ graph TD
     B -- Docker Socket --> E
     B -- Docker Socket --> F
     B -- Docker Socket --> G
-    A -- Portainer UI (HTTPS) --> D
-    A -- Wiki (HTTPS) --> E
+    A -- HTTP --> D
+    A -- HTTP --> E
+    A -- HTTP --> F
+    A -- HTTP --> G
     J -- Tailscale Funnel (HTTPS) --> B
+    K -- Tailscale VPN --> B
     style B fill:#f9f,stroke:#333,stroke-width:2px
 ```
 
-Pythonスクリプトとcronを組み合わせ、定期的なタスクを自動化しています。
+Pythonスクリプトとcronを組み合わせ、ラジオの録音を自動化しています。Tailscale VPNにより、ラジオはAndroidから聴くことができます。
 
 ```mermaid
 graph TD
@@ -43,6 +47,6 @@ graph TD
         I[Pythonスクリプト]
     end
     H -- 実行 --> I
-    I -- API Call --> AWS_Boto3
-    I -- Local Backup --> Volume
+    I -- API Call --> RSS
+    I -- ファイル作成 --> 共有サーバ
 ```
