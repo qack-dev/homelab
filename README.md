@@ -16,8 +16,8 @@ graph TD
         A[My Windows PC]
         B[My Debian Server on OrangePi]
     end
-    subgraph "Docker 環境 (Debian Server内)"
-        C[server monitor]
+    subgraph "Docker(Debianサーバ内)"
+        C[server monitor用コンテナ]
         D[App 1 Wiki.js]
         E[App 2 FreshRSS]
         F[App 3 Redmine]
