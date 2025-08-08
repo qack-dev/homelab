@@ -4,24 +4,25 @@
 
 ## 📖 アーキテクチャ構成図 (Architecture)
 
-このサーバは、セキュリティを確保しつつ外部から安全にアクセスするため、TailscaleによるVPNを基盤としています。サーバ内ではDockerを利用して各アプリケーションをコンテナとして分離・管理し、メンテナンス性と再現性を高めています。
+このサーバは、Tailscale Funnelによる公開を行っております。サーバ内ではDockerを利用して各アプリケーションをコンテナとして分離・管理し、メンテナンス性と再現性を高めています。
 
 ```mermaid
 graph TD
     subgraph "インターネット (Internet)"
-        A[開発者PC]
+        J[ユーザ]
     end
-    subgraph "Tailscale VPN (仮想プライベートネットワーク)"
-        B[Debian Server on OrangePi/VM]
+    subgraph "プライベートネットワーク"
+        A[開発者PC]
+        B[Debian Server on OrangePi]
     end
     subgraph "Docker 環境 (Debian Server内)"
-        C[Nginx Proxy Manager]
+        C[server monitor]
         D[Portainer]
         E[App 1 Wiki.js]
-        F[App 2 Uptime Kuma]
+        F[App 2 FreshRSS]
         G[App 3 その他アプリ]
     end
-    A -- HTTPS/SSH --> B
+    A -- SSH --> B
     B -- Docker Socket --> C
     B -- Docker Socket --> D
     B -- Docker Socket --> E
@@ -29,6 +30,7 @@ graph TD
     B -- Docker Socket --> G
     A -- Portainer UI (HTTPS) --> D
     A -- Wiki (HTTPS) --> E
+    J -- Tailscale Funnel (HTTPS) --> B
     style B fill:#f9f,stroke:#333,stroke-width:2px
 ```
 
