@@ -29,23 +29,32 @@ graph TD
     end
     subgraph "Docker(Debianサーバ内)"
         D[App 1 Wiki.js]
-        E[App 2 FreshRSS]
         F[App 3 Redmine]
         G[App 4 Heimdall]
+        subgraph "Dockerネットワーク rss-net"
+            E[App 2 FreshRSS]
+            H[App 5 RSSHub]
+        end
     end
     A -- SSH --> B
     B -- Docker Socket --> D
     B -- Docker Socket --> E
     B -- Docker Socket --> F
     B -- Docker Socket --> G
+    B -- Docker Socket --> H
     A -- HTTP --> D
     A -- HTTP --> E
     A -- HTTP --> F
     A -- HTTP --> G
+    A -- HTTP --> H
     J -- Tailscale Funnel (HTTPS) --> B
     K -- Tailscale VPN --> B
     style B fill:#f9f,stroke:#333,stroke-width:2px
 ```
+
+### ネットワーク特記事項
+*   `FreshRSS`コンテナが`RSSHub`コンテナの生成したフィードを取得するために、両コンテナは共通のDockerネットワーク **`rss-net`** に接続されています。
+*   これにより、`FreshRSS`はホストのIPアドレスではなく、コンテナ名 `rsshub` を使って直接フィードにアクセスできます。
 
 ## 🛠️ 主なアプリケーションと役割
 
@@ -54,6 +63,7 @@ graph TD
 | **Heimdall** | アプリケーションポータル | 各サービスへの入り口。 |
 | **Wiki.js** | ナレッジベース | サーバの構築手順や学習メモなどを集約。 |
 | **FreshRSS** | RSSリーダー | 情報の効率的な収集。 |
+| **RSSHub** | RSSフィード生成ツール | 公式RSSを提供しないサイト(Twitter等)の情報を収集。 |
 | **Redmine** | プロジェクト管理 | 個人の学習タスクを管理。 |
 
 ## 📖 自動化構成図
