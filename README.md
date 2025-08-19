@@ -28,12 +28,12 @@ graph TD
         B[SBC Orange Pi 03 Debian]
     end
     subgraph "Docker(Debianサーバ内)"
-        D[App 1 Wiki.js]
-        F[App 3 Redmine]
-        G[App 4 Heimdall]
+        D[App Wiki.js]
+        F[App Redmine]
+        G[App Heimdall]
         subgraph "Dockerネットワーク rss-net"
-            E[App 2 FreshRSS]
-            H[App 5 RSSHub]
+            E[App FreshRSS]
+            H[App RSSHub]
         end
     end
     A -- SSH --> B
