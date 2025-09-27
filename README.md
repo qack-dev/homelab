@@ -17,17 +17,56 @@
 
 ## 📖 アーキテクチャ構成図
 
+### 1. 物理・論理ネットワーク構成
+
+サーバー内部に**仮想ネットワーク基盤**を構築しました。物理的な構成はシンプルですが、その上で論理的に分割されたネットワークが動作しています。
+
+```mermaid
+graph LR
+    subgraph "インターネット"
+        direction TB
+        A[一般ユーザ]
+        B[My Android]
+    end
+
+    subgraph "自宅LAN (192.168.0.0/24)"
+        C[開発用PC Windows]
+        D[SBC Orange Pi 03 Debian]
+    end
+
+    subgraph "Debianサーバ内部"
+        direction TB
+        subgraph "仮想ネットワーク基盤"
+            E["<b>仮想スイッチ (Linux Bridge)</b><br>br0 (管理IP: 192.168.0.104)"]
+            F["<b>仮想ルーター (FRRouting)</b>"]
+            G["VLAN10 (192.168.10.0/24)"]
+            H["VLAN20 (192.168.20.0/24)"]
+        end
+
+        I["Dockerサービス"]
+
+        E <-- 物理NIC(end0)を束ねる --> F
+        F -- VLAN間ルーティング --> G & H
+    end
+
+    C -- SSH --> D
+    A -- Tailscale Funnel --> D
+    B -- Tailscale VPN --> D
+    D -- Docker Socket --> I
+```
+
+### 2. アプリケーション（コンテナ）構成
+
+各コンテナは、現状ではDockerが管理するデフォルトのブリッジネットワーク上で動作しています。
+
 ```mermaid
 graph TD
-    subgraph "パブリックネットワーク"
-        J[一般ユーザ]
-        K[My Android]
+    subgraph "SBC Orange Pi 03 Debian"
+        A[ホストOS]
     end
-    subgraph "ローカルネットワーク"
-        A[開発用PC Windows]
-        B[SBC Orange Pi 03 Debian]
-    end
-    subgraph "Docker(Debianサーバ内)"
+
+    subgraph "Dockerコンテナ群"
+        direction LR
         D[App Wiki.js]
         F[App Redmine]
         G[App Heimdall]
@@ -36,25 +75,20 @@ graph TD
             H[App RSSHub]
         end
     end
-    A -- SSH --> B
-    B -- Docker Socket --> D
-    B -- Docker Socket --> E
-    B -- Docker Socket --> F
-    B -- Docker Socket --> G
-    B -- Docker Socket --> H
-    A -- HTTP --> D
-    A -- HTTP --> E
-    A -- HTTP --> F
-    A -- HTTP --> G
-    A -- HTTP --> H
-    J -- Tailscale Funnel (HTTPS) --> B
-    K -- Tailscale VPN --> B
-    style B fill:#f9f,stroke:#333,stroke-width:2px
+
+    A -- "Dockerブリッジネットワーク<br>(docker0, br-xxxxなど)" --- D & F & G & E & H
 ```
 
-### ネットワーク特記事項
-*   `FreshRSS`コンテナが`RSSHub`コンテナの生成したフィードを取得するために、両コンテナは共通のDockerネットワーク **`rss-net`** に接続されています。
-*   これにより、`FreshRSS`はホストのIPアドレスではなく、コンテナ名 `rsshub` を使って直接フィードにアクセスできます。
+### ネットワーク特記事項と今後の展望
+
+*   **現状:**
+    *   サーバーホスト内に、Linux Bridge, VLAN, FRRoutingを用いた**仮想ネットワーク基盤**の構築が完了しました。
+    *   これにより、`192.168.10.0/24` (VLAN10) と `192.168.20.0/24` (VLAN20) という2つの論理ネットワークセグメントが利用可能になっています。
+    *   既存のDockerコンテナ群は、従来通りDockerのブリッジネットワーク上で稼働しています。
+
+*   **今後の展望 (Next Actions):**
+    *   Dockerの`macvlan`ネットワークドライバを利用して、各コンテナをその役割に応じたVLAN（VLAN10またはVLAN20）に直接所属させる予定です。
+    *   これにより、コンテナレベルでのIPアドレス管理と、`iptables`によるより厳格なセキュリティポリシーの適用を目指します。
 
 ## 🛠️ 主なアプリケーションと役割
 
@@ -84,9 +118,9 @@ graph TD
 日々の情報収集の一環として、ラジオ番組の自動録音・配信システムを構築しています。
 例） [らじる★らじる 聴き逃し番組ダウンローダー](https://github.com/qack-dev/rec_rajiru)
 
-*   **実行トリガー:** `cron`により、毎週指定した時刻にPythonスクリプトを実行。
+*   **実行トリガー:** `cron`により、毎週指定した時刻にPythonスクriptを実行。
 *   **録音処理:** Pythonスクリプトが`Podcast`などのRSSにアクセスし、対象の番組のURLを取得・ダウンロード。
 *   **ファイル共有:** ダウンロードされたファイルは、Sambaで共有されたストレージ領域に保存。
 *   **聴取:** **Tailscale VPN**経由で、Androidスマートフォンから自宅ネットワークの共有ストレージに安全にアクセスし、いつでもどこでも録音を聴くことが可能。
 
-`#Linux` `#Docker` `#Python` `#Automation` `#Networking` `#Security`
+`#Linux` `#Docker` `#Python` `#Automation` `#Networking` `#Security` `#VLAN` `#FRRouting`
